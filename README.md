@@ -15,31 +15,51 @@ Um código só para celular e computador: site responsivo, pensado primeiro para
 
 ## Como rodar
 
-1. Instale as dependências:
+**Pré-requisitos:** Node.js 20.9 ou mais novo e pnpm (se não tiver o pnpm: `corepack enable`).
+
+### 1. Criar o banco no Supabase (só na primeira vez)
+
+1. Crie uma conta em <https://supabase.com> e clique em **New project**. Dê um nome, crie uma senha do banco (guarde-a) e escolha a região **South America (São Paulo)**.
+2. Com o projeto pronto, abra o **SQL Editor** no menu lateral.
+3. Cole todo o conteúdo de [`supabase/migrations/20261119120000_schema_inicial.sql`](supabase/migrations/20261119120000_schema_inicial.sql) e clique em **Run**. Isso cria as tabelas.
+4. (Opcional) Numa consulta nova, cole [`supabase/seed.sql`](supabase/seed.sql) e clique em **Run**. Isso carrega os dados de exemplo.
+5. Em **Table Editor**, confira se as tabelas apareceram.
+
+### 2. Ligar o app ao Supabase
+
+1. No painel do projeto, clique em **Connect** (no topo) ou vá em **Project Settings > API Keys**. Copie:
+   - a **URL do projeto** (`https://xxxx.supabase.co`);
+   - a **Publishable key** (`sb_publishable_...`). Em projetos antigos, a equivalente é a **anon key**.
+2. Na pasta do projeto, crie o arquivo `.env.local` a partir do exemplo:
 
    ```bash
-   pnpm install
+   cp .env.example .env.local
    ```
 
-2. Crie um projeto no [Supabase](https://supabase.com/dashboard) e aplique o banco. Há dois jeitos:
-   - **Pelo painel:** abra o *SQL Editor*, cole e rode [`supabase/migrations/20261119120000_schema_inicial.sql`](supabase/migrations/20261119120000_schema_inicial.sql). Se quiser dados de teste, rode depois [`supabase/seed.sql`](supabase/seed.sql).
-   - **Pela linha de comando:**
+3. Abra o `.env.local` e cole a URL e a chave nos lugares indicados.
 
-     ```bash
-     pnpm dlx supabase login
-     pnpm dlx supabase link --project-ref SEU-PROJETO
-     pnpm dlx supabase db push
-     ```
+> Use só a chave **pública**. A chave secreta (`service_role` / `secret`) nunca entra no app. O `.env.local` não vai para o git.
 
-3. Copie `.env.example` para `.env.local` e preencha a URL e a chave **pública** (*publishable*) do projeto (*Project Settings > API Keys*). A chave secreta nunca entra no app.
+### 3. Rodar
 
-4. Suba o app:
+```bash
+pnpm install   # só na primeira vez, ou quando mudarem as dependências
+pnpm dev
+```
 
-   ```bash
-   pnpm dev
-   ```
+Abra <http://localhost:3000>. A página inicial lista os canteiros e as espécies cadastradas. Se aparecer "Supabase ainda não configurado", confira o `.env.local` e reinicie o `pnpm dev`.
 
-   Abra <http://localhost:3000>. A página inicial lista os canteiros e as espécies cadastradas.
+Para parar o app: `Ctrl + C` no terminal.
+
+### Alternativa: aplicar o banco pela linha de comando
+
+Em vez de colar o SQL no painel (passo 1):
+
+```bash
+pnpm dlx supabase login
+pnpm dlx supabase link --project-ref SEU-PROJETO   # o "xxxx" da URL
+pnpm dlx supabase db push
+```
 
 ## Estrutura de pastas
 
