@@ -9,7 +9,7 @@ Um código só para celular e computador: site responsivo, pensado primeiro para
 | Parte | Escolha |
 |---|---|
 | Tela e servidor | [Next.js 16](https://nextjs.org) (App Router, TypeScript) |
-| Visual | Tailwind CSS 4 |
+| Visual | Tailwind CSS 4 + shadcn/ui (mesmo kit dos apps Comigo), tema claro e escuro |
 | Banco, login e arquivos | [Supabase](https://supabase.com) (PostgreSQL) |
 | Gerenciador de pacotes | pnpm |
 
@@ -22,16 +22,35 @@ Um código só para celular e computador: site responsivo, pensado primeiro para
 ```bash
 pnpm install   # só na primeira vez, ou quando mudarem as dependências
 pnpm dev
+pnpm test      # testes das validações
 ```
+
+### 2. Login e cadastro (só na primeira vez, no painel do Supabase)
+
+1. **SQL Editor:** rode [`supabase/migrations/20261124120000_cadastro_cria_pessoa.sql`](supabase/migrations/20261124120000_cadastro_cria_pessoa.sql). Ele faz o cadastro criar a `pessoa` sozinho.
+2. **Authentication > URL Configuration > Redirect URLs:** adicione `http://localhost:3000/**` (e, quando publicar, o endereço do site com `/**`). Sem isso, o link do e-mail de confirmação não volta para o app.
+
+O e-mail de confirmação sai pelo servidor de e-mail gratuito do Supabase, que só envia poucos e-mails por hora. Para uso real, configure um SMTP próprio em **Authentication > Emails > SMTP Settings**.
 
 ## Estrutura de pastas
 
 ```
 src/
-  app/                 páginas (App Router)
+  app/
+    (app)/             telas de quem está logado: início, canteiros, espécies, pastas
+    login/, registro/  telas de entrar e criar conta
+    auth/actions.ts    entrar, cadastrar e sair (rodam no servidor)
+    auth/callback/     destino do link de confirmação do e-mail
+  components/
+    ui/                componentes do shadcn/ui (o mesmo kit dos apps Comigo)
+    layout/            topo, menu lateral, rodapé e menu da conta
+    gerenciar/         tela padrão de "Gerenciar X" (busca, cartões, cadastro e exclusão)
+  lib/validacao.ts     regras dos formulários (usadas na tela e no servidor)
+  lib/dados-exemplo.ts dados das telas de gerenciar enquanto não falam com o banco
   lib/supabase/
     server.ts          cliente do Supabase para o servidor (lê a sessão nos cookies)
     client.ts          cliente do Supabase para componentes "use client"
+  proxy.ts             renova a sessão e manda quem não está logado para /login
 supabase/
   migrations/          criação do banco, em ordem de data
   seed.sql             dados de exemplo
@@ -53,6 +72,7 @@ supabase/
 - **`grupo`** reúne pessoas e cuida de **um** canteiro (`grupo.canteiro_id`). Um canteiro pertence a no máximo um grupo (`UNIQUE`). O canteiro é opcional, para um grupo recém-formado.
 - **`grupo_pessoa`** é N:N: um grupo tem várias pessoas e uma pessoa pode participar de mais de um grupo. Se a regra for "cada pessoa em um grupo só", basta um `UNIQUE (pessoa_id)` nessa tabela.
 - **Segurança (RLS):** no Supabase o navegador fala direto com o banco, então toda tabela tem RLS ligado. Regra inicial: visitante só **lê** o catálogo (espécies, pragas, canteiros, pastas e receitas); quem está logado lê e escreve em tudo; `pessoa`, `grupo` e `grupo_pessoa` não são públicas, porque têm e-mail e telefone.
+- **Login:** `pessoa.user_id` liga a pessoa ao usuário do Supabase Auth (1:1, opcional: nem toda pessoa precisa ter login). Ao se cadastrar pela tela, um gatilho em `auth.users` cria a pessoa com o nome e o telefone do formulário. Se já existir uma pessoa com o mesmo e-mail e sem login, ela é ligada ao novo usuário em vez de duplicada.
 
 
 ### Diagrama (Mermaid)
@@ -85,6 +105,7 @@ erDiagram
         string nome
         string email "nullable, unico"
         string telefone "nullable"
+        uuid user_id FK "nullable, unico (auth.users)"
     }
     GRUPO {
         bigint id PK
