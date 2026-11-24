@@ -1,16 +1,25 @@
+import Link from "next/link";
 import { Suspense } from "react";
+import { sair } from "@/app/auth/actions";
 import { createClient, supabaseConfigurado } from "@/lib/supabase/server";
 
 export default function Home() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-8">
-      <header>
-        <h1 className="text-2xl font-semibold text-green-900 dark:text-green-200">
-          🌱 Horta Comunitária
-        </h1>
-        <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-          Canteiros, plantas, pragas e pastas da horta.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-green-900 dark:text-green-200">
+            🌱 Horta Comunitária
+          </h1>
+          <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+            Canteiros, plantas, pragas e pastas da horta.
+          </p>
+        </div>
+        {supabaseConfigurado() && (
+          <Suspense fallback={<span className="h-9" />}>
+            <MenuUsuario />
+          </Suspense>
+        )}
       </header>
 
       {supabaseConfigurado() ? (
@@ -80,6 +89,43 @@ async function Resumo() {
           {listaEspecies.length === 0 && <li className="text-zinc-500">Nenhuma espécie.</li>}
         </ul>
       </section>
+    </div>
+  );
+}
+
+/** Mostra "Entrar / Criar conta" para visitante, ou o nome e o botão Sair para quem está logado. */
+async function MenuUsuario() {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+
+  if (!claims) {
+    return (
+      <nav className="flex items-center gap-2 text-sm font-medium">
+        <Link href="/login" className="rounded-lg px-3 py-2 text-green-800 hover:bg-green-50 dark:text-green-300 dark:hover:bg-green-950">
+          Entrar
+        </Link>
+        <Link href="/registro" className="rounded-lg bg-green-700 px-3 py-2 text-white hover:bg-green-800 dark:bg-green-600 dark:hover:bg-green-500">
+          Criar conta
+        </Link>
+      </nav>
+    );
+  }
+
+  // o gatilho do cadastro liga o login à pessoa (pessoa.user_id)
+  const { data: pessoa } = await supabase.from("pessoa").select("nome").eq("user_id", claims.sub).maybeSingle();
+  const primeiroNome = pessoa?.nome?.split(" ")[0] ?? claims.email ?? "você";
+
+  return (
+    <div className="flex items-center gap-3 text-sm">
+      <span className="text-zinc-700 dark:text-zinc-300">
+        Olá, <strong>{primeiroNome}</strong>
+      </span>
+      <form action={sair}>
+        <button type="submit" className="rounded-lg border border-zinc-300 px-3 py-2 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800">
+          Sair
+        </button>
+      </form>
     </div>
   );
 }
