@@ -2,7 +2,8 @@
 
 import { Lock, Mail, Phone, User } from "lucide-react";
 import Link from "next/link";
-import { startTransition, useActionState, useRef, useState, type FormEvent } from "react";
+import { startTransition, useActionState, useCallback, useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import { Button } from "@/components/ui/button";
 import { Aviso, BotaoEnviar, Campo } from "@/components/campo";
 import {
   SENHA_MIN,
@@ -19,8 +20,28 @@ import {
 import { cadastrar } from "../auth/actions";
 import type { EstadoCadastro } from "../auth/tipos";
 
+/**
+ * O Next 16 não desmonta a página ao navegar: esconde e mostra de novo como estava.
+ * Sem isto, quem criava uma conta, saía e voltava para "Criar conta" via o aviso
+ * "Confirme seu e-mail" do cadastro anterior, sem o formulário.
+ * Cada "rodada" é um formulário novo; trocar a chave recomeça do zero.
+ */
 export function FormRegistro() {
+  const [rodada, setRodada] = useState(0);
+  // só avança se ainda estiver nesta rodada (evita reiniciar duas vezes)
+  const reiniciar = useCallback((daRodada: number) => setRodada((atual) => (atual === daRodada ? atual + 1 : atual)), []);
+  return <Formulario key={rodada} rodada={rodada} reiniciar={reiniciar} />;
+}
+
+function Formulario({ rodada, reiniciar }: { rodada: number; reiniciar: (daRodada: number) => void }) {
   const [estado, acao, pendente] = useActionState<EstadoCadastro, FormData>(cadastrar, {});
+
+  // depois de um cadastro com sucesso, ao sair da tela (ela fica escondida), já deixa um formulário limpo
+  const cadastrou = Boolean(estado.sucesso);
+  useLayoutEffect(() => {
+    if (!cadastrou) return;
+    return () => reiniciar(rodada);
+  }, [cadastrou, reiniciar, rodada]);
   const [errosLocais, setErrosLocais] = useState<ErrosCampos<CamposCadastro>>({});
   const [telefone, setTelefone] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
@@ -84,9 +105,12 @@ export function FormRegistro() {
             clique no link para ativar a conta.
           </p>
         </Aviso>
-        <Link href="/login" className="text-center text-sm font-medium text-primary underline-offset-4 hover:underline">
-          Ir para o login
-        </Link>
+        <Button asChild className="h-11">
+          <Link href="/login">Ir para o login</Link>
+        </Button>
+        <Button variant="ghost" onClick={() => reiniciar(rodada)}>
+          Criar outra conta
+        </Button>
       </div>
     );
   }

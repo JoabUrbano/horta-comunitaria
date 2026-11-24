@@ -56,8 +56,11 @@ export async function cadastrar(_anterior: EstadoCadastro, form: FormData): Prom
   return { sucesso: { email } };
 }
 
+/**
+ * Encerra a sessão. Quem chama recarrega a página inteira em seguida (ver MenuUsuario),
+ * para não sobrar na memória nada do que o usuário anterior deixou aberto.
+ */
 export async function sair() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/login");
 }

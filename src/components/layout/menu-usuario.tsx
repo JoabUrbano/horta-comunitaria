@@ -76,7 +76,13 @@ export function MenuUsuario({ nome, email }: { nome: string; email: string }) {
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={(e) => {
                 e.preventDefault();
-                iniciarSaida(() => sair());
+                iniciarSaida(async () => {
+                  await sair();
+                  // recarrega tudo: o Next guarda as telas visitadas na memória, e o próximo
+                  // usuário deste navegador não pode ver o que o anterior deixou aberto
+                  // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- recarga completa proposital (guia "preserving-ui-state" do Next)
+                  window.location.href = "/login";
+                });
               }}
             >
               {saindo ? "Saindo…" : "Sair"}
