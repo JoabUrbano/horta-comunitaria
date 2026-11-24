@@ -1,5 +1,6 @@
 "use client";
 
+import { Lock, Mail, Phone, User } from "lucide-react";
 import Link from "next/link";
 import { startTransition, useActionState, useRef, useState, type FormEvent } from "react";
 import { Aviso, BotaoEnviar, Campo } from "@/components/campo";
@@ -22,7 +23,6 @@ export function FormRegistro() {
   const [estado, acao, pendente] = useActionState<EstadoCadastro, FormData>(cadastrar, {});
   const [errosLocais, setErrosLocais] = useState<ErrosCampos<CamposCadastro>>({});
   const [telefone, setTelefone] = useState("");
-  const [mostrarSenha, setMostrarSenha] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   const erro = (campo: CamposCadastro) => (campo in errosLocais ? errosLocais[campo] : estado.erros?.[campo]);
@@ -84,7 +84,7 @@ export function FormRegistro() {
             clique no link para ativar a conta.
           </p>
         </Aviso>
-        <Link href="/login" className="text-center text-sm font-medium text-green-700 underline dark:text-green-400">
+        <Link href="/login" className="text-center text-sm font-medium text-primary underline-offset-4 hover:underline">
           Ir para o login
         </Link>
       </div>
@@ -98,6 +98,7 @@ export function FormRegistro() {
       <Campo
         name="nome"
         rotulo="Nome completo"
+        icone={User}
         autoComplete="name"
         autoCapitalize="words"
         maxLength={150}
@@ -109,6 +110,7 @@ export function FormRegistro() {
       <Campo
         name="email"
         rotulo="E-mail"
+        icone={Mail}
         type="email"
         inputMode="email"
         autoComplete="email"
@@ -121,6 +123,7 @@ export function FormRegistro() {
       <Campo
         name="telefone"
         rotulo="Telefone (opcional)"
+        icone={Phone}
         type="tel"
         inputMode="tel"
         autoComplete="tel-national"
@@ -139,7 +142,8 @@ export function FormRegistro() {
       <Campo
         name="senha"
         rotulo="Senha"
-        type={mostrarSenha ? "text" : "password"}
+        icone={Lock}
+        type="password"
         autoComplete="new-password"
         dica={`Pelo menos ${SENHA_MIN} caracteres, com letras e números.`}
         erro={erro("senha")}
@@ -150,25 +154,22 @@ export function FormRegistro() {
       <Campo
         name="confirmarSenha"
         rotulo="Repita a senha"
-        type={mostrarSenha ? "text" : "password"}
+        icone={Lock}
+        type="password"
         autoComplete="new-password"
         erro={erro("confirmarSenha")}
         onBlur={(e) => e.target.value && revalidar("confirmarSenha", e.target.value)}
         onChange={(e) => revalidar("confirmarSenha", e.target.value, true)}
       />
 
-      <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-        <input type="checkbox" checked={mostrarSenha} onChange={(e) => setMostrarSenha(e.target.checked)} />
-        Mostrar senha
-      </label>
 
       <BotaoEnviar pendente={pendente} textoPendente="Criando conta…">
         Criar conta
       </BotaoEnviar>
 
-      <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="text-center text-sm text-muted-foreground">
         Já tem conta?{" "}
-        <Link href="/login" className="font-medium text-green-700 underline dark:text-green-400">
+        <Link href="/login" className="font-medium text-primary underline-offset-4 hover:underline">
           Entrar
         </Link>
       </p>

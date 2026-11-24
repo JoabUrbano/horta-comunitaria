@@ -1,5 +1,6 @@
 "use client";
 
+import { Lock, Mail } from "lucide-react";
 import Link from "next/link";
 import { startTransition, useActionState, useState, type FormEvent } from "react";
 import { Aviso, BotaoEnviar, Campo } from "@/components/campo";
@@ -16,7 +17,6 @@ export function FormLogin() {
   const [estado, acao, pendente] = useActionState<EstadoLogin, FormData>(entrar, {});
   // erros vistos na tela; quando o campo já foi validado aqui, vale o daqui
   const [errosLocais, setErrosLocais] = useState<ErrosCampos<CamposLogin>>({});
-  const [mostrarSenha, setMostrarSenha] = useState(false);
 
   const erro = (campo: CamposLogin) => (campo in errosLocais ? errosLocais[campo] : estado.erros?.[campo]);
 
@@ -45,6 +45,7 @@ export function FormLogin() {
       <Campo
         name="email"
         rotulo="E-mail"
+        icone={Mail}
         type="email"
         inputMode="email"
         autoComplete="email"
@@ -57,24 +58,21 @@ export function FormLogin() {
       <Campo
         name="senha"
         rotulo="Senha"
-        type={mostrarSenha ? "text" : "password"}
+        icone={Lock}
+        type="password"
         autoComplete="current-password"
         erro={erro("senha")}
         onChange={(e) => revalidar("senha", e.target.value, true)}
       />
 
-      <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-        <input type="checkbox" checked={mostrarSenha} onChange={(e) => setMostrarSenha(e.target.checked)} />
-        Mostrar senha
-      </label>
 
       <BotaoEnviar pendente={pendente} textoPendente="Entrando…">
         Entrar
       </BotaoEnviar>
 
-      <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="text-center text-sm text-muted-foreground">
         Ainda não tem conta?{" "}
-        <Link href="/registro" className="font-medium text-green-700 underline dark:text-green-400">
+        <Link href="/registro" className="font-medium text-primary underline-offset-4 hover:underline">
           Criar conta
         </Link>
       </p>

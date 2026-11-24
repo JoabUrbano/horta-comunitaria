@@ -59,5 +59,5 @@ export async function cadastrar(_anterior: EstadoCadastro, form: FormData): Prom
 export async function sair() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/");
+  redirect("/login");
 }

@@ -3,11 +3,14 @@ import { NextResponse, type NextRequest } from "next/server";
 
 // telas que não fazem sentido para quem já está logado
 const SO_PARA_VISITANTE = ["/login", "/registro"];
+// abertas para quem não está logado (o resto exige login)
+const PUBLICAS = [...SO_PARA_VISITANTE, "/auth/callback"];
 
 /**
- * Roda antes de cada página: renova a sessão do Supabase (o token vence a cada
- * hora) e grava os cookies novos na resposta.
- * Não é aqui que se protege dado: quem protege é o RLS do banco.
+ * Roda antes de cada página:
+ *  1. renova a sessão do Supabase (o token vence a cada hora) e grava os cookies novos;
+ *  2. quem não está logado vai para /login; quem está logado e abre /login ou /registro vai para o início.
+ * Isso cuida da navegação. Quem protege os DADOS é o RLS do banco.
  */
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -33,16 +36,23 @@ export async function proxy(request: NextRequest) {
   // Não coloque código entre createServerClient e getClaims: é o getClaims que renova a sessão.
   const { data } = await supabase.auth.getClaims();
 
-  if (data?.claims && SO_PARA_VISITANTE.includes(request.nextUrl.pathname)) {
-    const destino = request.nextUrl.clone();
-    destino.pathname = "/";
-    destino.search = "";
-    const redirecionar = NextResponse.redirect(destino);
-    response.cookies.getAll().forEach((cookie) => redirecionar.cookies.set(cookie));
-    return redirecionar;
-  }
+  const caminho = request.nextUrl.pathname;
+  const logado = Boolean(data?.claims);
+
+  if (!logado && !PUBLICAS.includes(caminho)) return redirecionarPara("/login", request, response);
+  if (logado && SO_PARA_VISITANTE.includes(caminho)) return redirecionarPara("/", request, response);
 
   return response;
+}
+
+/** Redireciona levando junto os cookies de sessão que o Supabase acabou de renovar. */
+function redirecionarPara(caminho: string, request: NextRequest, response: NextResponse) {
+  const destino = request.nextUrl.clone();
+  destino.pathname = caminho;
+  destino.search = "";
+  const redirecionar = NextResponse.redirect(destino);
+  response.cookies.getAll().forEach((cookie) => redirecionar.cookies.set(cookie));
+  return redirecionar;
 }
 
 export const config = {
