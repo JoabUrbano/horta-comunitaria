@@ -17,7 +17,11 @@ export function mensagemErroAuth(error: AuthError, contexto: "login" | "cadastro
     case "signup_disabled":
       return "Os cadastros estão fechados no momento.";
     case "over_email_send_rate_limit":
-      return "Muitos e-mails enviados em pouco tempo. Espere alguns minutos e tente de novo.";
+      // o e-mail gratuito do Supabase manda só 2 por hora; com SMTP próprio o limite sobe
+      return "Muitos e-mails enviados em pouco tempo. Tente de novo daqui a pouco (pode levar até 1 hora).";
+    case "email_address_not_authorized":
+      // o e-mail gratuito do Supabase só envia para quem é da equipe do projeto
+      return "Não conseguimos enviar e-mail para este endereço ainda. Fale com quem administra a horta.";
     case "over_request_rate_limit":
       return "Muitas tentativas seguidas. Espere um pouco e tente de novo.";
   }
