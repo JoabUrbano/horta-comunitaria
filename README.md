@@ -9,7 +9,7 @@ Um código só para celular e computador: site responsivo, pensado primeiro para
 | Parte | Escolha |
 |---|---|
 | Tela e servidor | [Next.js 16](https://nextjs.org) (App Router, TypeScript) |
-| Visual | Tailwind CSS 4 |
+| Visual | Tailwind CSS 4 + shadcn/ui (mesmo kit dos apps Comigo), tema claro e escuro |
 | Banco, login e arquivos | [Supabase](https://supabase.com) (PostgreSQL) |
 | Gerenciador de pacotes | pnpm |
 
@@ -37,15 +37,20 @@ O e-mail de confirmação sai pelo servidor de e-mail gratuito do Supabase, que 
 ```
 src/
   app/
+    (app)/             telas de quem está logado: início, canteiros, espécies, pastas
     login/, registro/  telas de entrar e criar conta
     auth/actions.ts    entrar, cadastrar e sair (rodam no servidor)
     auth/callback/     destino do link de confirmação do e-mail
-  components/          campo de formulário, avisos, moldura das telas de login
+  components/
+    ui/                componentes do shadcn/ui (o mesmo kit dos apps Comigo)
+    layout/            topo, menu lateral, rodapé e menu da conta
+    gerenciar/         tela padrão de "Gerenciar X" (busca, cartões, cadastro e exclusão)
   lib/validacao.ts     regras dos formulários (usadas na tela e no servidor)
+  lib/dados-exemplo.ts dados das telas de gerenciar enquanto não falam com o banco
   lib/supabase/
     server.ts          cliente do Supabase para o servidor (lê a sessão nos cookies)
     client.ts          cliente do Supabase para componentes "use client"
-  proxy.ts             renova a sessão a cada página
+  proxy.ts             renova a sessão e manda quem não está logado para /login
 supabase/
   migrations/          criação do banco, em ordem de data
   seed.sql             dados de exemplo
